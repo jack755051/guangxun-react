@@ -1,5 +1,6 @@
 import { getCookies } from "./cookies";
 import { ApiError } from "./error";
+import { toBodyHelper } from "./body";
 
 export type ResponseType = "json" | "text" | "blob" | "arrayBuffer" | "formData";
 
@@ -93,11 +94,7 @@ export async function httpRequest<T = unknown>(options: HttpOptions): Promise<Ht
   };
 
   if (upper !== "GET" && body !== undefined) {
-    fetchInit.body = isFormData
-      ? body
-      : mergedHeaders["Content-Type"] === "application/json"
-        ? JSON.stringify(body)
-        : body;
+    fetchInit.body = toBodyHelper(body, mergedHeaders["Content-Type"]);
   }
 
   try {
