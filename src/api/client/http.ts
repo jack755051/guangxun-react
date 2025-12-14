@@ -1,6 +1,7 @@
 import { getCookies } from "./cookies";
 import { ApiError } from "./error";
 import { toBodyHelper } from "./body";
+import { runRequestInterceptors, runResponseInterceptors } from "./interceptor";
 
 export type ResponseType = "json" | "text" | "blob" | "arrayBuffer" | "formData";
 
@@ -40,6 +41,9 @@ function buildUrl(baseURL: string, path: string, query?: Record<string, unknown>
 }
 
 export async function httpRequest<T = unknown>(options: HttpOptions): Promise<HttpResult<T>> {
+  // 執行請求攔截器
+  const interceptedOptions = await runRequestInterceptors(options);
+
   //options 解構與預設值
   const {
     baseUrl,
@@ -54,7 +58,7 @@ export async function httpRequest<T = unknown>(options: HttpOptions): Promise<Ht
     accessToken,
     csrfCookieName = "XSRF-TOKEN",
     csrfHeaderName = "X-XSRF-TOKEN",
-  } = options;
+  } = interceptedOptions;
 
   const url = buildUrl(baseUrl, path, query);
   // 用AbortController來實現timeout
@@ -112,7 +116,12 @@ export async function httpRequest<T = unknown>(options: HttpOptions): Promise<Ht
       throw new ApiError(status, res.statusText, parsed);
     }
 
-    return { status, data: parsed as T };
+    let result: HttpResult<T> = { status, data: parsed as T };
+
+    // 執行回應攔截器
+    result = (await runResponseInterceptors(result)) as HttpResult<T>;
+
+    return result;
   } catch (e: unknown) {
     if (e instanceof DOMException && e.name === "AbortError")
       throw new ApiError(408, "Request Timeout");
