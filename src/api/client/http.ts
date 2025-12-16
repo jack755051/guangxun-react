@@ -2,10 +2,15 @@ import { getCookies } from "./cookies";
 import { ApiError } from "./error";
 import { toBodyHelper } from "./body";
 import { runRequestInterceptors, runResponseInterceptors } from "./interceptor";
+import { dedupeRequest } from "./requestCache";
 
 export type ResponseType = "json" | "text" | "blob" | "arrayBuffer" | "formData";
 
-export type HttpResult<T> = { status: number; data: T };
+export type HttpResult<T> = {
+  status: number;
+  data: T;
+  headers?: Headers;
+};
 
 export type HttpOptions = {
   baseUrl: string;
@@ -20,6 +25,7 @@ export type HttpOptions = {
   accessToken?: string;
   csrfCookieName?: string; // "XSRF-TOKEN"
   csrfHeaderName?: string; // "X-XSRF-TOKEN"
+  enableDedup?: boolean; // 預設啟用請求去重
 };
 
 /**
@@ -40,11 +46,13 @@ function buildUrl(baseURL: string, path: string, query?: Record<string, unknown>
   return url.toString();
 }
 
-export async function httpRequest<T = unknown>(options: HttpOptions): Promise<HttpResult<T>> {
+// ========================================
+// 將原本的請求邏輯提取為獨立函數
+// ========================================
+async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
   // 執行請求攔截器
   const interceptedOptions = await runRequestInterceptors(options);
 
-  //options 解構與預設值
   const {
     baseUrl,
     path,
@@ -61,32 +69,26 @@ export async function httpRequest<T = unknown>(options: HttpOptions): Promise<Ht
   } = interceptedOptions;
 
   const url = buildUrl(baseUrl, path, query);
-  // 用AbortController來實現timeout
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  // mergedHeaders：合併 header 並追加 Authorization/CSRF
   const mergedHeaders: Record<string, string> = { ...headers };
 
-  // Authorization
   if (accessToken) {
     mergedHeaders["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  // CSRF (non-GET)
   const upper = method.toUpperCase();
   if (upper !== "GET") {
     const xsrf = getCookies(csrfCookieName);
     if (xsrf) mergedHeaders[csrfHeaderName] = xsrf;
   }
 
-  // FormData: do not set content-type
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   if (isFormData) {
     delete mergedHeaders["Content-Type"];
     delete mergedHeaders["content-type"];
   } else if (body && typeof body == "object" && !(body instanceof Blob)) {
-    // 如果是一般 JSON
     if (!mergedHeaders["Content-Type"]) mergedHeaders["Content-Type"] = "application/json";
   }
 
@@ -97,7 +99,8 @@ export async function httpRequest<T = unknown>(options: HttpOptions): Promise<Ht
     signal: controller.signal,
   };
 
-  if (upper !== "GET" && body !== undefined) {
+  const methodsWithoutBody = ["GET", "HEAD", "OPTIONS"];
+  if (!methodsWithoutBody.includes(upper) && body !== undefined) {
     fetchInit.body = toBodyHelper(body, mergedHeaders["Content-Type"]);
   }
 
@@ -110,15 +113,25 @@ export async function httpRequest<T = unknown>(options: HttpOptions): Promise<Ht
     else if (responseType === "arrayBuffer") parsed = await res.arrayBuffer();
     else if (responseType === "text") parsed = await res.text();
     else if (responseType === "formData") parsed = await res.formData();
-    else parsed = await res.json().catch(() => null);
+    else {
+      try {
+        parsed = await res.json();
+      } catch (jsonError) {
+        console.warn("[HTTP] Response is not valid JSON:", url);
+        parsed = null;
+      }
+    }
 
     if (!res.ok) {
       throw new ApiError(status, res.statusText, parsed);
     }
 
-    let result: HttpResult<T> = { status, data: parsed as T };
+    let result: HttpResult<T> = {
+      status,
+      data: parsed as T,
+      headers: res.headers,
+    };
 
-    // 執行回應攔截器
     result = (await runResponseInterceptors(result)) as HttpResult<T>;
 
     return result;
@@ -127,7 +140,22 @@ export async function httpRequest<T = unknown>(options: HttpOptions): Promise<Ht
       throw new ApiError(408, "Request Timeout");
     throw e;
   } finally {
-    // 避免 timer 未被清除造成記憶體外洩
-    window.clearTimeout(timer);
+    clearTimeout(timer);
   }
+}
+
+// ========================================
+// 主要入口：根據 enableDedup 決定是否去重
+// ========================================
+export async function httpRequest<T = unknown>(options: HttpOptions): Promise<HttpResult<T>> {
+  const { enableDedup = true } = options;
+
+  // 如果關閉去重，直接執行請求
+  if (!enableDedup) {
+    console.log("[HTTP] 去重已關閉，直接發送請求");
+    return executeRequest(options);
+  }
+
+  // 啟用去重
+  return dedupeRequest(options, () => executeRequest(options));
 }
