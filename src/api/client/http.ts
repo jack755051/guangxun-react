@@ -26,6 +26,7 @@ export type HttpOptions = {
   csrfCookieName?: string; // "XSRF-TOKEN"
   csrfHeaderName?: string; // "X-XSRF-TOKEN"
   enableDedup?: boolean; // 預設啟用請求去重
+  signal?: AbortSignal; // 用於取消請求
 };
 
 /**
@@ -66,12 +67,45 @@ async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
     accessToken,
     csrfCookieName = "XSRF-TOKEN",
     csrfHeaderName = "X-XSRF-TOKEN",
+    signal: externalSignal,
   } = interceptedOptions;
 
   const url = buildUrl(baseUrl, path, query);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  // ========================================
+  // 合併內部 timeout 和外部 signal
+  // ========================================
+
+  const internalController = new AbortController();
+  const timer = setTimeout(() => internalController.abort(), timeoutMs);
+
+  // 如果有外部 signal，需要合併兩個 signal
+  let finalSignal: AbortSignal;
+
+  if (externalSignal) {
+    // 使用 AbortSignal.any() 合併多個 signal (需要新版瀏覽器支援)
+    if ("any" in AbortSignal) {
+      finalSignal = (AbortSignal as any).any([internalController.signal, externalSignal]);
+    } else {
+      // 舊瀏覽器的相容方案
+      finalSignal = internalController.signal;
+
+      // 當外部 signal 取消時，也取消內部 controller
+      if (externalSignal.aborted) {
+        internalController.abort();
+      } else {
+        externalSignal.addEventListener("abort", () => {
+          internalController.abort();
+        });
+      }
+    }
+  } else {
+    finalSignal = internalController.signal;
+  }
+
+  // ========================================
+  // Headers 處理
+  // ========================================
   const mergedHeaders: Record<string, string> = { ...headers };
 
   if (accessToken) {
@@ -96,7 +130,7 @@ async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
     method: upper,
     headers: mergedHeaders,
     credentials,
-    signal: controller.signal,
+    signal: finalSignal,
   };
 
   const methodsWithoutBody = ["GET", "HEAD", "OPTIONS"];
@@ -136,8 +170,14 @@ async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
 
     return result;
   } catch (e: unknown) {
-    if (e instanceof DOMException && e.name === "AbortError")
+    // 區分 timeout 和外部取消
+    if (externalSignal?.aborted) {
+      // 外部取消
+      throw new ApiError(499, "Request Cancelled by User");
+    } else {
+      // Timeout
       throw new ApiError(408, "Request Timeout");
+    }
     throw e;
   } finally {
     clearTimeout(timer);
