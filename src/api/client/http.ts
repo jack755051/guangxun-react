@@ -86,7 +86,7 @@ async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
   if (externalSignal) {
     // 使用 AbortSignal.any() 合併多個 signal (需要新版瀏覽器支援)
     if ("any" in AbortSignal) {
-      finalSignal = (AbortSignal as any).any([internalController.signal, externalSignal]);
+      finalSignal = AbortSignal.any([internalController.signal, externalSignal]);
     } else {
       // 舊瀏覽器的相容方案
       finalSignal = internalController.signal;

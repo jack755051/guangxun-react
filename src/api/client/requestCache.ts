@@ -1,6 +1,14 @@
 import type { HttpOptions, HttpResult } from "./http";
 
-// 儲存進行中的請求
+/**
+ * 儲存進行中的請求
+ *
+ * 注意：使用 any 是為了支援不同型別的請求共存於同一個 Map
+ * 這是安全的，因為：
+ * 1. 相同的 cache key 必然產生相同型別的結果
+ * 2. dedupeRequest 函數確保型別正確性
+ * 3. Map 只是臨時儲存，請求完成後會移除
+ */
 const pendingRequests = new Map<string, Promise<HttpResult<any>>>();
 
 function generateCacheKey(options: HttpOptions): string {
@@ -173,7 +181,7 @@ if (import.meta.env.DEV) {
   }, 10000);
 
   // 暴露除錯 API 到全域（開發模式）
-  (window as any).__httpDebug = {
+  window.__httpDebug = {
     getPendingCount: getPendingRequestCount,
     getPendingKeys: getPendingKeys,
     getCacheInfo: getRequestCacheInfo,

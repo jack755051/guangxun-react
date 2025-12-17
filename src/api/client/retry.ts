@@ -10,6 +10,26 @@ export type RetryOptions = {
 };
 
 /**
+ * Rate Limit 錯誤回應的型別
+ */
+interface RateLimitResponse {
+  retryAfter?: number | string;
+  retry_after?: number | string;
+  retryAfterSeconds?: number | string;
+}
+
+/**
+ * Type Guard: 檢查是否為 Rate Limit 回應
+ */
+function isRateLimitResponse(data: unknown): data is RateLimitResponse {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    ("retryAfter" in data || "retry_after" in data || "retryAfterSeconds" in data)
+  );
+}
+
+/**
  * 預設的重試條件：只重試 5xx 伺服器錯誤
  */
 function defaultRetryCondition(error: ApiError): boolean {
@@ -73,23 +93,21 @@ function getRetryAfterSeconds(error: ApiError): number | null {
   }
 
   // 2. 從 error.data 中讀取（備用方案，某些後端會把資訊放在 body）
-  if (error.data && typeof error.data === "object") {
-    const data = error.data as any;
-
+  if (error.data && isRateLimitResponse(error.data)) {
     // 常見的欄位名稱
-    if (data.retryAfter) {
-      const seconds = Number(data.retryAfter);
+    if (error.data.retryAfter) {
+      const seconds = Number(error.data.retryAfter);
       if (!isNaN(seconds) && seconds > 0) return seconds;
     }
 
-    if (data.retry_after) {
-      const seconds = Number(data.retry_after);
+    if (error.data.retry_after) {
+      const seconds = Number(error.data.retry_after);
       if (!isNaN(seconds) && seconds > 0) return seconds;
     }
 
     // 其他可能的欄位名稱
-    if (data.retryAfterSeconds) {
-      const seconds = Number(data.retryAfterSeconds);
+    if (error.data.retryAfterSeconds) {
+      const seconds = Number(error.data.retryAfterSeconds);
       if (!isNaN(seconds) && seconds > 0) return seconds;
     }
   }
