@@ -3,6 +3,7 @@ import { ApiError } from "./error";
 import { toBodyHelper } from "./body";
 import { runRequestInterceptors, runResponseInterceptors } from "./interceptor";
 import { dedupeRequest } from "./requestCache";
+import { executeWithRetry, type RetryOptions } from "./retry";
 
 export type ResponseType = "json" | "text" | "blob" | "arrayBuffer" | "formData";
 
@@ -27,7 +28,7 @@ export type HttpOptions = {
   csrfHeaderName?: string; // "X-XSRF-TOKEN"
   enableDedup?: boolean; // 預設啟用請求去重
   signal?: AbortSignal; // 用於取消請求
-};
+} & RetryOptions;
 
 /**
  * 建立完整的 URL 字串
@@ -157,7 +158,7 @@ async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
     }
 
     if (!res.ok) {
-      throw new ApiError(status, res.statusText, parsed);
+      throw new ApiError(status, res.statusText, parsed, res.headers);
     }
 
     let result: HttpResult<T> = {
@@ -170,14 +171,15 @@ async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
 
     return result;
   } catch (e: unknown) {
-    // 區分 timeout 和外部取消
-    if (externalSignal?.aborted) {
-      // 外部取消
-      throw new ApiError(499, "Request Cancelled by User");
-    } else {
-      // Timeout
-      throw new ApiError(408, "Request Timeout");
+    // 只處理 AbortError
+    if (e instanceof DOMException && e.name === "AbortError") {
+      if (externalSignal?.aborted) {
+        throw new ApiError(499, "Request Cancelled by User");
+      } else {
+        throw new ApiError(408, "Request Timeout");
+      }
     }
+    // 其他錯誤直接拋出
     throw e;
   } finally {
     clearTimeout(timer);
@@ -188,14 +190,30 @@ async function executeRequest<T>(options: HttpOptions): Promise<HttpResult<T>> {
 // 主要入口：根據 enableDedup 決定是否去重
 // ========================================
 export async function httpRequest<T = unknown>(options: HttpOptions): Promise<HttpResult<T>> {
-  const { enableDedup = true } = options;
+  const { enableDedup = true, retry, retryDelay, retryCondition } = options;
 
-  // 如果關閉去重，直接執行請求
-  if (!enableDedup) {
-    console.log("[HTTP] 去重已關閉，直接發送請求");
-    return executeRequest(options);
+  // 提取 retry 相關選項
+  const retryOptions: RetryOptions = {
+    retry,
+    retryDelay,
+    retryCondition,
+  };
+
+  // 包裝請求函數
+  const requestFn = () => {
+    if (!enableDedup) {
+      // 如果關閉去重，直接執行請求並帶上重試邏輯
+      return executeRequest<T>(options);
+    }
+    // 啟用去重
+    return dedupeRequest(options, () => executeRequest<T>(options));
+  };
+
+  // 如果有設定 retry，使用 retry 包裝
+  if (retry !== undefined && retry > 0) {
+    return executeWithRetry(requestFn, retryOptions);
   }
 
-  // 啟用去重
-  return dedupeRequest(options, () => executeRequest(options));
+  // 沒有 retry，直接執行
+  return requestFn();
 }

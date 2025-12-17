@@ -10,10 +10,20 @@
  */
 
 /**
+ * API 基礎 URL
+ */
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.example.com";
+
+/**
  * Token 存儲的 key 名稱
  * 💡 根據後端協議修改這個值
  */
-export const TOKEN_STORAGE_KEY = "access_token";
+export const TOKEN_STORAGE_KEY = import.meta.env.VITE_TOKEN_STORAGE_KEY || "access_token";
+
+/**
+ * API 請求超時時間（毫秒）
+ */
+export const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 30000;
 
 /**
  * 路由路徑常數
@@ -32,4 +42,14 @@ export const ROUTES = {
 export const CSRF_CONFIG = {
   cookieName: "XSRF-TOKEN",
   headerName: "X-XSRF-TOKEN",
+} as const;
+
+/**
+ * 完整的 API 配置物件
+ */
+export const API_CONFIG = {
+  baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
+  tokenKey: TOKEN_STORAGE_KEY,
+  csrf: CSRF_CONFIG,
 } as const;
