@@ -34,19 +34,65 @@ function getRetryDelay(
   return retryDelay;
 }
 
+/**
+ * 從 429 錯誤中讀取 Retry-After 時間（秒）
+ *
+ * Retry-After header 的兩種格式：
+ * 1. 延遲秒數：Retry-After: 120
+ * 2. HTTP 日期：Retry-After: Wed, 21 Oct 2025 07:28:00 GMT
+ *
+ * @param error - ApiError 錯誤物件
+ * @returns Retry-After 秒數，如果沒有則返回 null
+ */
 function getRetryAfterSeconds(error: ApiError): number | null {
-  // 嘗試從不同來源讀取 Retry-After
+  // 1. 優先從 headers 中讀取（標準做法，符合 HTTP 規範）
+  if (error.headers) {
+    const retryAfter = error.headers.get("Retry-After");
 
-  // 1. 從 error.data 中讀取（如果後端放在 body 裡）
-  if (error.data && typeof error.data === "object") {
-    const data = error.data as any;
-    if (data.retryAfter) return Number(data.retryAfter);
-    if (data.retry_after) return Number(data.retry_after);
+    if (retryAfter) {
+      // 檢查是否為數字（延遲秒數）
+      const seconds = Number(retryAfter);
+      if (!isNaN(seconds) && seconds > 0) {
+        return seconds;
+      }
+
+      // 檢查是否為 HTTP 日期格式
+      try {
+        const retryDate = new Date(retryAfter);
+        const now = new Date();
+        const diffMs = retryDate.getTime() - now.getTime();
+        const diffSeconds = Math.ceil(diffMs / 1000);
+
+        if (diffSeconds > 0) {
+          return diffSeconds;
+        }
+      } catch (e) {
+        // 日期解析失敗，繼續嘗試其他方式
+      }
+    }
   }
 
-  // 2. 從 headers 中讀取（標準做法）
-  // 注意：這需要 ApiError 有 headers 欄位
-  // 我們稍後會修改 ApiError
+  // 2. 從 error.data 中讀取（備用方案，某些後端會把資訊放在 body）
+  if (error.data && typeof error.data === "object") {
+    const data = error.data as any;
+
+    // 常見的欄位名稱
+    if (data.retryAfter) {
+      const seconds = Number(data.retryAfter);
+      if (!isNaN(seconds) && seconds > 0) return seconds;
+    }
+
+    if (data.retry_after) {
+      const seconds = Number(data.retry_after);
+      if (!isNaN(seconds) && seconds > 0) return seconds;
+    }
+
+    // 其他可能的欄位名稱
+    if (data.retryAfterSeconds) {
+      const seconds = Number(data.retryAfterSeconds);
+      if (!isNaN(seconds) && seconds > 0) return seconds;
+    }
+  }
 
   return null;
 }

@@ -2,6 +2,26 @@
 
 ## 快速開始
 
+### 方式 1: 使用便利 API（推薦）✨
+
+```typescript
+import { api } from './request';
+
+// GET 請求（自動使用環境變數的 baseURL）
+const result = await api.get('/users');
+
+// POST 請求
+await api.post('/users', { name: 'John', email: 'john@example.com' });
+
+// PUT 請求
+await api.put('/users/1', { name: 'Jane' });
+
+// DELETE 請求
+await api.delete('/users/1');
+```
+
+### 方式 2: 使用底層 API
+
 ```typescript
 import { httpRequest } from './client/http';
 
@@ -25,48 +45,41 @@ await httpRequest({
 ### 1. 基本請求
 
 ```typescript
+// 使用便利 API
+import { api } from './request';
+
 // GET with query
-await httpRequest({
-  baseUrl: 'https://api.example.com',
-  path: '/users',
-  query: { page: 1, limit: 10 },
-});
+await api.get('/users', { query: { page: 1, limit: 10 } });
 
 // POST with JSON
-await httpRequest({
-  baseUrl: 'https://api.example.com',
-  path: '/users',
-  method: 'POST',
-  body: { name: 'John' },
-});
+await api.post('/users', { name: 'John' });
 
 // 上傳檔案
 const formData = new FormData();
 formData.append('file', file);
+await api.post('/upload', formData);
 
+// 使用底層 API（需要完整控制時）
 await httpRequest({
   baseUrl: 'https://api.example.com',
-  path: '/upload',
-  method: 'POST',
-  body: formData,
+  path: '/users',
+  query: { page: 1, limit: 10 },
 });
 ```
 
 ### 2. 自動重試
 
 ```typescript
+import { api } from './request';
+
 // 網路不穩定時自動重試
-await httpRequest({
-  baseUrl: 'https://api.example.com',
-  path: '/data',
+await api.get('/data', {
   retry: 3,              // 重試 3 次
   retryDelay: 1000,      // 每次間隔 1 秒
 });
 
 // 指數退避
-await httpRequest({
-  baseUrl: 'https://api.example.com',
-  path: '/data',
+await api.get('/data', {
   retry: 5,
   retryDelay: (attempt) => Math.pow(2, attempt) * 1000, // 1s, 2s, 4s, 8s, 16s
 });
@@ -75,14 +88,12 @@ await httpRequest({
 ### 3. 請求取消
 
 ```typescript
+import { api } from './request';
+
 // 元件卸載時自動取消
 const controller = new AbortController();
 
-httpRequest({
-  baseUrl: 'https://api.example.com',
-  path: '/users',
-  signal: controller.signal,
-});
+api.get('/users', { signal: controller.signal });
 
 // 取消請求
 controller.abort();
@@ -91,11 +102,12 @@ controller.abort();
 ### 4. 處理 Rate Limit (429)
 
 ```typescript
-await httpRequest({
-  baseUrl: 'https://api.example.com',
-  path: '/data',
+import { api } from './request';
+
+// 自動讀取 Retry-After header 並等待適當時間
+await api.get('/data', {
   retry: 3,
-  handleRateLimit: true, // 自動讀取 Retry-After 並等待
+  handleRateLimit: true, // 智能處理 429 錯誤
 });
 ```
 
@@ -112,11 +124,15 @@ VITE_TOKEN_STORAGE_KEY=access_token
 使用：
 
 ```typescript
-import { API_CONFIG } from './config';
+import { api } from './request';
 
-await httpRequest({
-  baseUrl: API_CONFIG.baseURL, // 自動讀取環境變數
-  path: '/users',
+// api.* 方法會自動使用環境變數的 baseURL 和 timeout
+await api.get('/users');
+
+// 如果需要覆蓋預設值
+await api.get('/users', {
+  baseUrl: 'https://other-api.com', // 覆蓋 baseURL
+  timeoutMs: 60000,                 // 覆蓋 timeout
 });
 ```
 
