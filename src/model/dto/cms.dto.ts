@@ -23,11 +23,10 @@ export type FooterCmsDTO =
   | {
       type: "rich";
       contact_info: {
-        tel: string[];
-        fax?: string[];
-        address?: string;
-        email?: string;
-        [key: string]: unknown;
+        // 支持兩種格式：
+        // 1. 字串（單一值）: { email: "support@example.com" }
+        // 2. 物件陣列（多個值）: { tel: [{ label: "台北總公司", value: "09xxxxx" }] }
+        [key: string]: string | { label: string; value: string }[];
       };
       router_list: {
         list_label: string;
