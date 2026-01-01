@@ -3,7 +3,7 @@ import { ApiError } from "@/api/client/error";
 /**
  * 將各種類型的 body 轉換為 fetch API 可接受的 BodyInit 格式
  * @param body 要轉換的請求體資料
- * @param contentType 內容類型標頭
+ * @param contentType 內容類型標頭ㄍ
  * @returns 轉換後的 BodyInit 或 undefined
  */
 export function toBodyHelper(body: unknown, contentType?: string): BodyInit | undefined {

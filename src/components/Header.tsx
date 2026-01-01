@@ -1,1 +1,1 @@
-export default function Header() { }
+export default function Header(vm: HeaderViewModel) {}
