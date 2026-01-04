@@ -17,7 +17,7 @@ export type ICopyRight = {
 
 /** For Router information in the footer */
 export type IRouter = {
-  title: string;
+  title?: string;
   routers: IRouterList[];
 };
 
@@ -40,10 +40,13 @@ export type ContactItem = {
   value: string;
 };
 
-export type IContactInfoBase = {
-  // key 可能是 'tel', 'address', 'email' 等
-  // 值可能是字串（單一），或是物件陣列（多個分公司）
-  [key: string]: string | ContactItem[];
+export type IContactInfo = {
+  title?: string;
+  info: {
+    // key 可能是 'tel', 'address', 'email' 等
+    // 值可能是字串（單一），或是物件陣列（多個分公司）
+    [key: string]: string | ContactItem[];
+  };
 };
 
 // ====================
@@ -52,7 +55,7 @@ export type IContactInfoBase = {
 
 export type blockSingleLine = ICopyRight;
 export type blockLinks = ICopyRight & IRouter;
-export type blockRich = ICopyRight & IRouter & { contactInfo: IContactInfoBase };
+export type blockRich = ICopyRight & IRouter & { contactInfo: IContactInfo };
 
 // ====================
 //    組合式 ViewModel

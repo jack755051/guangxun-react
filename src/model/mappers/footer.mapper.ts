@@ -1,7 +1,7 @@
 import { MAX_LINKS } from "../domain/footer.policy";
 import { isHttpUrl, safeText } from "../domain/guards/primitives.guard";
 import type { FooterCmsDTO } from "../dto/cms.dto";
-import type { FooterViewModel, IRouterItem, IRouterList } from "../view-model/footer.view-model";
+import type { FooterViewModel, IRouterItem, IRouterList, IContactInfo } from "../view-model/footer.view-model";
 import { isNotNull } from "./_shared/type-guards";
 
 /** 映射FooterCmsDTO到FooterViewModel */
@@ -25,7 +25,8 @@ export function mapFooterCmsToViewModel(dto: FooterCmsDTO): FooterViewModel {
         kind: "links",
         data: {
           companyName,
-          title: "Links",
+          // TODO 後續處理
+          title: "Links / 連結",
           routers,
         },
       };
@@ -33,7 +34,7 @@ export function mapFooterCmsToViewModel(dto: FooterCmsDTO): FooterViewModel {
     case "rich": {
       const companyName = safeText(dto.copy_right, "©");
       const routers = mapRouterList(dto.router_list);
-      const contactInfo = mapContactInfo(dto.contact_info);
+      const contactInfo = mapContactInfo(dto.contact_info, dto.contact_info_title);
 
       const hasAnyRouters = routers.some((s) => s.routers.length > 0);
       if (!hasAnyRouters && !companyName) return fallbackFooter();
@@ -42,7 +43,8 @@ export function mapFooterCmsToViewModel(dto: FooterCmsDTO): FooterViewModel {
         kind: "rich",
         data: {
           companyName,
-          title: "Links",
+          // TODO 後續處理
+          title: "Links / 連結",
           routers,
           contactInfo,
         },
@@ -104,16 +106,17 @@ function mapRouterList(
  * 2. 物件陣列：{ tel: [{ label: "台北總公司", value: "09xxxxx" }] }
  */
 function mapContactInfo(
-  contactInfoDto: Record<string, string | { label: string; value: string }[]>
-): Record<string, string | { label: string; value: string }[]> {
-  const result: Record<string, string | { label: string; value: string }[]> = {};
+  contactInfoDto: Record<string, string | { label: string; value: string }[]>,
+  titleDto?: string
+): IContactInfo {
+  const infoResult: Record<string, string | { label: string; value: string }[]> = {};
 
   Object.entries(contactInfoDto).forEach(([key, value]) => {
     // 格式 1: 字串（直接使用）
     if (typeof value === "string") {
       const cleanValue = safeText(value, "");
       if (cleanValue) {
-        result[key] = cleanValue;
+        infoResult[key] = cleanValue;
       }
       return;
     }
@@ -131,12 +134,15 @@ function mapContactInfo(
         .filter(isNotNull);
 
       if (cleanedArray.length > 0) {
-        result[key] = cleanedArray;
+        infoResult[key] = cleanedArray;
       }
     }
   });
 
-  return result;
+  return {
+    title: titleDto ? safeText(titleDto, "") : undefined,
+    info: infoResult,
+  };
 }
 
 /** 保底 footer */

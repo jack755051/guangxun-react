@@ -5,27 +5,40 @@ import { ContactInfoBlock } from "@/components/Footer/blocks/ContactInfoBlock";
 
 export function Rich(props: blockRich) {
   return (
-    <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-      <div className="container mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* 聯絡方式區塊 */}
-          <div className="lg:col-span-1">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Contact Us
-            </h3>
-            <ContactInfoBlock info={props.contactInfo} />
-          </div>
-
-          {/* 路由連結區塊 */}
-          <div className="lg:col-span-3">
-            <RouterListBlock {...props} />
-          </div>
+    <footer className="flex flex-col w-full bg-background px-10">
+      <div className="flex py-6">
+        {/* 聯絡方式區塊 */}
+        <div className="w-[50%]">
+          <ContactInfoBlock
+            {...props.contactInfo}
+            className={{
+              wrapper: "grid grid-cols-2 gap-4",
+              title: "text-xl mb-6",
+              value: "text-sm",
+              listItem: "flex space-x-2",
+              listItemLabel: "text-sm",
+              listItemValue: "text-xs",
+            }}
+          />
         </div>
-
-        {/* 版權區塊 */}
-        <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-6 text-center">
-          <CopyRightBlock {...props} />
+        {/* 路由連結區塊 */}
+        <div className="flex-1">
+          <RouterListBlock
+            {...props}
+            className={{
+              nav: "space-y-6",
+              title: "text-xl mb-6",
+              grid: "gap-8",
+              group: "space-y-2",
+              groupTitle: "text-md text-gray-600",
+              list: "space-y-2 text-gray-400",
+            }}
+          />
         </div>
+      </div>
+      {/* 版權區塊 */}
+      <div className="border-t border-gray-200 dark:border-gray-700 py-2 text-center">
+        <CopyRightBlock {...props} />
       </div>
     </footer>
   );

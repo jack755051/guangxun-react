@@ -8,7 +8,7 @@ import type { FooterCmsDTO } from "@/model/dto/cms.dto";
 // Variant 1: Single Line (simplest)
 export const mockFooterSingleLine: FooterCmsDTO = {
   type: "single_line",
-  label: "Google Inc.",
+  label: "SanRing Tech Ltd.",
 };
 
 // Variant 2: Links (current - your data)
@@ -40,13 +40,14 @@ export const mockFooterLinks: FooterCmsDTO = {
       ],
     },
   ],
-  copy_right: "Google Inc.",
+  copy_right: "SanRing Tech Ltd.",
 };
 
 // Variant 3: Rich (with contact info - new flexible format)
 export const mockFooterRich: FooterCmsDTO = {
   type: "rich",
-  copy_right: "Google Inc.",
+  copy_right: "SanRing Tech Ltd.",
+  contact_info_title: "Contact Us",
   contact_info: {
     // 字串格式（單一值）
     email: "support@example.com",
@@ -88,7 +89,7 @@ export const mockFooterRich: FooterCmsDTO = {
  * - mockFooterLinks
  * - mockFooterRich
  */
-export const mockFooterData: FooterCmsDTO = mockFooterLinks; // <-- Change here to switch variant
+export const mockFooterData: FooterCmsDTO = mockFooterRich; // <-- Change here to switch variant
 
 /**
  * Simulate API delay for realistic development experience

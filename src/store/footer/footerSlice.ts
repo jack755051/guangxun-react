@@ -17,7 +17,7 @@ const footerSlice = createSlice({
   name: "footer",
   initialState,
   reducers: {
-    setFooterDato(state, action: PayloadAction<FooterCmsDTO>) {
+    setFooterData(state, action: PayloadAction<FooterCmsDTO>) {
       state.dto = action.payload;
       state.loading = false;
       state.error = undefined;
@@ -25,5 +25,5 @@ const footerSlice = createSlice({
   },
 });
 
-export const { setFooterDato } = footerSlice.actions;
+export const { setFooterData } = footerSlice.actions;
 export default footerSlice.reducer;

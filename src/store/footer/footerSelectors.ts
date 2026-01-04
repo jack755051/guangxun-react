@@ -10,7 +10,7 @@ export const selectFooterDto = (state: RootState) => state.footer.dto;
 const DEFAULT_FOOTER_VM: FooterViewModel = {
   kind: "single_line",
   data: {
-    companyName: "Loading...",
+    companyName: "SanRing Tech Ltd.",
   },
 };
 

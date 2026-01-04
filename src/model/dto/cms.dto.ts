@@ -22,6 +22,7 @@ export type FooterCmsDTO =
     }
   | {
       type: "rich";
+      contact_info_title?: string;
       contact_info: {
         // 支持兩種格式：
         // 1. 字串（單一值）: { email: "support@example.com" }

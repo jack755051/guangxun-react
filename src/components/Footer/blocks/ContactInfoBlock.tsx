@@ -1,25 +1,41 @@
-import type { ContactItem, IContactInfoBase } from "@/model/view-model/footer.view-model";
+import type { ContactItem, IContactInfo } from "@/model/view-model/footer.view-model";
+import { cn } from "@/lib/utils";
 
-function ContactInfoItem({ label, value }: { label: string; value: string | ContactItem[] }) {
+interface ContactInfoBlockProps extends IContactInfo {
+  className?: Record<string, string>;
+}
+
+interface ContactInfoItemProps {
+  label: string;
+  value: string | ContactItem[];
+  className?: Record<string, string>;
+}
+
+function ContactInfoItem({ label, value, className }: ContactInfoItemProps) {
   const renderValue = () => {
     if (Array.isArray(value)) {
+      const validItems = value.filter((item) => item.label && item.value);
+      if (validItems.length === 0) return null;
+
       return (
-        <ul className="space-y-1 mt-1">
-          {value.map((item, i) => (
-            <li key={i} className="text-gray-600 dark:text-gray-400">
-              <span className="font-medium">{item.label}:</span>{" "}
-              <span>{item.value}</span>
+        <ul className={cn("space-y-1 mt-1", className?.list)}>
+          {validItems.map((item, i) => (
+            <li key={i} className={cn(className?.listItem)}>
+              <span className={cn("text-gray-600", className?.listItemLabel)}>{item.label}:</span>{" "}
+              <span className={cn("text-gray-400", className?.listItemValue)}>{item.value}</span>
             </li>
           ))}
         </ul>
       );
     }
-    return <span className="text-gray-700 dark:text-gray-300">{value}</span>;
+
+    if (!value || (typeof value === "string" && value.trim() === "")) return null;
+    return <span className={cn("text-gray-600", className?.value)}>{value}</span>;
   };
 
   return (
-    <div className="mb-3">
-      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 uppercase tracking-wide mb-1">
+    <div className={cn("mb-3", className?.item)}>
+      <p className={cn("text-sm font-semibold text-gray-800 uppercase", className?.label)}>
         {label}
       </p>
       {renderValue()}
@@ -28,12 +44,23 @@ function ContactInfoItem({ label, value }: { label: string; value: string | Cont
 }
 
 /* 聯絡方式區塊 */
-export function ContactInfoBlock({ info }: { info: IContactInfoBase }) {
+export function ContactInfoBlock({ title, info, className }: ContactInfoBlockProps) {
+  const hasContent = info && Object.keys(info).length > 0;
+
   return (
-    <div className="space-y-2">
-      {Object.entries(info).map(([key, value]) => (
-        <ContactInfoItem key={key} label={key} value={value} />
-      ))}
+    <div className={cn("space-y-4", className?.container)}>
+      {title && (
+        <h3 className={cn("text-lg font-semibold text-gray-900 dark:text-white", className?.title)}>
+          {title}
+        </h3>
+      )}
+      {hasContent && (
+        <div className={cn("space-y-2", className?.wrapper)}>
+          {Object.entries(info).map(([key, value]) => (
+            <ContactInfoItem key={key} label={key} value={value} className={className} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
