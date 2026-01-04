@@ -1,7 +1,12 @@
 import { MAX_LINKS } from "../domain/footer.policy";
 import { isHttpUrl, safeText } from "../domain/guards/primitives.guard";
 import type { FooterCmsDTO } from "../dto/cms.dto";
-import type { FooterViewModel, IRouterItem, IRouterList, IContactInfo } from "../view-model/footer.view-model";
+import type {
+  FooterViewModel,
+  IRouterItem,
+  IRouterList,
+  IContactInfo,
+} from "../view-model/footer.view-model";
 import { isNotNull } from "./_shared/type-guards";
 
 /** 映射FooterCmsDTO到FooterViewModel */

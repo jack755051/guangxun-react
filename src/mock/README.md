@@ -28,25 +28,30 @@ export const mockFooterData: FooterCmsDTO = mockFooterRich;
 ## 🔄 數據流說明
 
 ### 1. Mock Data (開發階段)
+
 - 位置：`src/mock/footer.ts`
 - 三種預設數據：`mockFooterSingleLine`, `mockFooterLinks`, `mockFooterRich`
 - 模擬 500ms API 延遲
 
 ### 2. API Service
+
 - 位置：`src/api/footer.api.ts`
 - 開發環境：自動使用 mock 數據
 - 生產環境：調用真實 API `/footer`
 
 ### 3. Redux Store
+
 - 位置：`src/store/footer/`
 - `footerSlice.ts` - 定義 state 和 reducer
 - `footerSelectors.ts` - DTO → ViewModel 轉換
 
 ### 4. Mapper
+
 - 位置：`src/model/mappers/footer.mapper.ts`
 - 將 CMS DTO 映射為組件使用的 ViewModel
 
 ### 5. Component
+
 - 位置：`src/components/Footer/`
 - `Footer.tsx` - 主入口
 - `variants/` - 三種佈局變體
@@ -63,6 +68,7 @@ export const mockFooterData: FooterCmsDTO = mockFooterRich;
 ### 當 CMS 後端準備好時：
 
 1. **修改環境變數** (或直接修改 `footer.api.ts`)
+
    ```typescript
    const USE_MOCK = false; // 改為 false
    ```
@@ -77,6 +83,7 @@ export const mockFooterData: FooterCmsDTO = mockFooterRich;
 ### 調整樣式（可選）
 
 目前已有基本 Tailwind 樣式，如需調整：
+
 - **Block 層級**：`src/components/Footer/blocks/*.tsx`
 - **Variant 層級**：`src/components/Footer/variants/*.tsx`
 
@@ -85,6 +92,7 @@ export const mockFooterData: FooterCmsDTO = mockFooterRich;
 當前 mock 數據使用：**Links** (包含三個導航區塊)
 
 可以看到：
+
 - 關於我們 (關於我們、團隊介紹、聯絡我們)
 - 產品服務 (產品列表、解決方案、定價方案)
 - 資源中心 (部落格、文件、API)

@@ -1,14 +1,17 @@
 import "./App.css";
 import { Footer } from "./components/Footer";
+import { Header } from "./components/Header";
 import { selectFooterVM } from "./store/footer/footerSelectors";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { fetchFooterConfig } from "./api/footer.api";
 import { setFooterData } from "./store/footer/footerSlice";
+import { selectHeaderVM } from "@/store/header/headerSelectors.ts";
 
 function App() {
   const dispatch = useDispatch();
   const footerVm = useSelector(selectFooterVM);
+  const headerVm = useSelector(selectHeaderVM);
 
   // 在應用啟動時獲取 Footer 配置
   useEffect(() => {
@@ -24,10 +27,10 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Header {...headerVm} />
+
       {/* 主要內容區域 */}
-      <main className="flex-grow">
-        {/* 你的頁面內容放這裡 */}
-      </main>
+      <main className="flex-grow">{/* 你的頁面內容放這裡 */}</main>
 
       {/* Footer 永遠在底部 */}
       <Footer {...footerVm} />
