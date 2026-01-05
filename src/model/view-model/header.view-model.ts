@@ -15,10 +15,27 @@ export interface INavItem {
   children?: INavItem[];
 }
 
+export interface IAuthTextGroup {
+  loginText?: string;
+  registerText?: string;
+  welcomeText?: string;
+}
+
+export interface IAvatar {
+  imageUrl: string;
+  fallbackText: string;
+}
+
+export interface IUserInfo {
+  userName: string;
+  email?: string;
+  avatar: IAvatar;
+}
+
 // 認證區塊（登入/註冊）
 export interface IAuth {
-  loginText: string;
-  registerText?: string;
+  textGroup: IAuthTextGroup;
+  user: IUserInfo;
 }
 
 // 搜尋區塊

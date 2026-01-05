@@ -4,11 +4,6 @@
  */
 
 export { routesConfig } from "./routes.config";
-export {
-  flattenRoutes,
-  generateNavItems,
-  generateBreadcrumbs,
-  findRouteMeta,
-} from "./utils";
+export { flattenRoutes, generateNavItems, generateBreadcrumbs, findRouteMeta } from "./utils";
 export { RouteRenderer } from "./RouteRenderer";
 export type { RouteConfig, RouteMeta, FlatRoute, NavItem, BreadcrumbItem } from "./types";

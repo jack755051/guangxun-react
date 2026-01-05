@@ -45,16 +45,16 @@ export const routesConfig: RouteConfig[] = [
       icon: "Package",
       showInNav: true,
     },
-    children: [
-      {
-        path: ":id",
-        component: lazy(() => import("@/pages/Products/Detail")),
-        meta: {
-          title: "產品詳情",
-          showInNav: false,
-          breadcrumbLabel: "詳情",
-        },
-      },
-    ],
+    // children: [
+    //   {
+    //     path: ":id",
+    //     component: lazy(() => import("@/pages/Products/Detail")),
+    //     meta: {
+    //       title: "產品詳情",
+    //       showInNav: false,
+    //       breadcrumbLabel: "詳情",
+    //     },
+    //   },
+    // ],
   },
 ];

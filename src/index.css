@@ -1,35 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- 核心品牌色 (科技感設定) --- */
-  /* 主色：科技青 (不偏正藍，帶一點綠意，更有數位感) */
-  --color-primary: hsl(187 100% 42%);
+  /* --- 核心品牌色 (深邃、專業) --- */
+  /* 主色：電光藍 (降低了一點綠意，增加權威感) */
+  --color-primary: hsl(210 100% 50%);
   --color-primary-foreground: hsl(0 0% 100%);
 
-  /* 輔色：板岩灰藍 (沈穩、專業，用於支撐主色) */
-  --color-secondary: hsl(215 25% 27%);
+  /* 輔色：深淵藍 (沉穩的核心，用於替代原本的灰藍) */
+  --color-secondary: hsl(222 47% 11%);
   --color-secondary-foreground: hsl(210 40% 98%);
 
-  /* 點綴色：極光紫 (用於少量按鈕或標籤，增加視覺層次) */
-  --color-accent: hsl(263 70% 50%);
+  /* 點綴色：賽博紫 (保留你的極光紫，但微調使其更具發光感) */
+  --color-accent: hsl(263 70% 60%);
   --color-accent-foreground: hsl(210 40% 98%);
 
-  /* --- 基礎佈局色 --- */
-  --color-background: hsl(0 0% 100%); /* 純白背景 */
-  --color-foreground: hsl(222 47% 11%); /* 深色文字 (非純黑) */
+  /* --- 基礎佈局色 (關鍵：捨棄純白，改用深色底) --- */
+  --color-background: hsl(224 71% 4%); /* 極致深藍黑，營造空間深度 */
+  --color-foreground: hsl(213 31% 91%); /* 淺灰文字，降低刺眼感 */
 
-  /* --- 中性色 (收縮後的簡潔設定) --- */
-  --color-muted: hsl(210 40% 96.1%);
-  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
+  /* --- 中性色 (強化金屬與玻璃質感) --- */
+  --color-muted: hsl(222 47% 15%);
+  --color-muted-foreground: hsl(215 20% 65%);
 
-  --color-border: hsl(214.3 31.8% 91.4%);
-  --color-input: hsl(214.3 31.8% 91.4%);
-  --color-ring: var(--color-primary);
+  --color-border: hsl(222 47% 20%);
+  --color-input: hsl(222 47% 15%);
+  --color-ring: hsl(210 100% 50%);
 
-  /* --- 圓角與其餘 --- */
-  --radius-lg: 0.5rem;
-  --radius-md: calc(0.5rem - 2px);
-  --radius-sm: calc(0.5rem - 4px);
+  --radius-lg: 0.25rem; /* 科技感通常搭配較銳利的圓角 */
 }
 
 /* Temporarily disabled to prevent automatic dark mode from prefers-color-scheme
@@ -68,4 +65,19 @@ body {
   @apply inline-block px-3 py-1.5 text-sm rounded-lg transition-all duration-200
            hover:text-primary hover:font-semibold hover:bg-gray-100 hover:shadow-md
            dark:hover:bg-gray-800;
+}
+
+/* --- 科技感動畫效果 --- */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
 }
